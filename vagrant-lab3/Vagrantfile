@@ -1,0 +1,22 @@
+#Public Env 
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
+# Vagrant file Body 
+Vagrant.configure("2") do |config|
+  ##### VM definition #####
+  config.vm.define "web-server" do |config|
+  config.vm.hostname = "webserver"
+#  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.box = "debian/bookworm64"
+  config.vm.network "private_network", type: "static", ip: "192.168.121.100"
+  config.vm.box_check_update = false
+# Ansible Configuration for provisioning some service 
+  config.vm.provision :ansible do |ansible|
+    ansible.limit = "all"
+    ansible.playbook = "provision.yaml"
+  end
+  config.vm.provider :libvirt do |v|
+    v.memory = 1024
+    v.cpus = 1
+    end
+  end
+end

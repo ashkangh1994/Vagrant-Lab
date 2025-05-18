@@ -1,0 +1,72 @@
+Vagrant.configure("2") do |config|
+  # Public Configurations 
+  config.vm.box = "debian/bookworm64"
+  #config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.provider "libvirt"
+  #Hosts Configurations 
+  config.vm.define "controller1.k8s.local" do |controller1|
+  controller1.vm.network "private_network", ip: "192.168.121.11"
+  controller1.vm.hostname = "controller1.k8s.local"
+  controller1.vm.provider "libvirt" do |controller1|
+    controller1.memory = 2048
+    controller1.cpus = 2
+  end
+  end
+  config.vm.define "controller2.k8s.local" do |controller2|
+  controller2.vm.network "private_network", ip: "192.168.121.12"
+  controller2.vm.hostname = "controller2.k8s.local"
+  controller2.vm.provider "libvirt" do |controller2|
+    controller2.memory = 2048
+    controller2.cpus = 2
+  end
+  end
+  config.vm.define "controller3.k8s.local" do |controller3|
+  controller3.vm.network "private_network", ip: "192.168.121.13"
+  controller3.vm.hostname = "controller3.k8s.local"
+  controller3.vm.provider "libvirt" do |controller3|
+    controller3.memory = 2048
+    controller3.cpus = 2
+  end
+  end
+  config.vm.define "ha1.k8s.local" do |ha1|
+  ha1.vm.network "private_network", ip: "192.168.121.10"
+  ha1.vm.hostname = "ha1.k8s.local"
+  ha1.vm.provider "libvirt" do |ha1|
+    ha1.memory = 1024
+    ha1.cpus = 1
+  end
+  end
+  config.vm.define "ha2.k8s.local" do |ha2|
+  ha2.vm.network "private_network", ip: "192.168.121.20"
+  ha2.vm.hostname = "ha2.k8s.local"
+  ha2.vm.provider "libvirt" do |ha2|
+    ha2.memory = 1024
+    ha2.cpus = 1
+  end
+  end
+  config.vm.define "worker1.k8s.local" do |worker1|
+  worker1.vm.network "private_network", ip: "192.168.121.14"
+  worker1.vm.hostname = "worker1.k8s.local"
+  worker1.vm.provider "libvirt" do |worker1|
+    worker1.memory = 2048
+    worker1.cpus = 2
+  end
+  end
+  config.vm.define "worker2.k8s.local" do |worker2|
+  worker2.vm.network "private_network", ip: "192.168.121.15"
+  worker2.vm.hostname = "worker2.k8s.local"
+  worker2.vm.provider "libvirt" do |worker2|
+    worker2.memory = 2048
+    worker2.cpus = 2
+  end
+  end 
+  config.vm.define "worker3.k8s.local" do |worker3|
+    worker3.vm.network "private_network", ip: "192.168.121.16" 
+    worker3.vm.hostname = "worker3.k8s.local"
+    worker3.vm.provider "libvirt" do |worker3|
+      worker3.memory = 2048
+      worker3.cpus = 2
+  end
+end
+end
+
