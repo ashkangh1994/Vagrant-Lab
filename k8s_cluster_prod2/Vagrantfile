@@ -1,0 +1,109 @@
+# Vagrantfile for 2 Master nodes, 3 Worker nodes, and 2 HAProxy nodes with VRRP using libvirt
+Vagrant.configure("2") do |config|
+  # Define the base box for Debian Bookworm
+  config.vm.box = "generic/debian12"
+  
+  # Use the libvirt provider for all VMs
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.memory = 2048  # Default memory for nodes
+    libvirt.cpus = 1       # Default CPU for nodes
+  end
+
+  # Create Master node 1
+  config.vm.define "master1" do |node|
+    node.vm.hostname = "master1"
+    node.vm.network "private_network", ip: "192.168.121.10", libvirt__network_name: "vagrant-libvirt"
+    node.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 2048   # 2 GB RAM
+      libvirt.cpus = 1        # 1 CPU
+    end
+    node.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+    SHELL
+  end
+
+  # Create Master node 2
+  config.vm.define "master2" do |node|
+    node.vm.hostname = "master2"
+    node.vm.network "private_network", ip: "192.168.121.11", libvirt__network_name: "vagrant-libvirt"
+    node.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 2048   # 2 GB RAM
+      libvirt.cpus = 1        # 1 CPU
+    end
+    node.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+    SHELL
+  end
+  # Create Master node 3
+  config.vm.define "master3" do |node|
+    node.vm.hostname = "master3"
+    node.vm.network "private_network", ip: "192.168.121.12", libvirt__network_name: "vagrant-libvirt"
+    node.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 2048   # 2 GB RAM
+      libvirt.cpus = 1        # 1 CPU
+    end
+    node.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+    SHELL
+  end
+
+  # Create Worker node 1
+  config.vm.define "worker1" do |node|
+    node.vm.hostname = "worker1"
+    node.vm.network "private_network", ip: "192.168.121.20", libvirt__network_name: "vagrant-libvirt"
+    node.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 4096   # 4 GB RAM
+      libvirt.cpus = 2        # 2 CPUs
+    end
+    node.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+    SHELL
+  end
+
+  # Create Worker node 2
+  config.vm.define "worker2" do |node|
+    node.vm.hostname = "worker2"
+    node.vm.network "private_network", ip: "192.168.121.21", libvirt__network_name: "vagrant-libvirt"
+    node.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 4096   # 4 GB RAM
+      libvirt.cpus = 2        # 2 CPUs
+    end
+    node.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+    SHELL
+  end
+
+  # Create Worker node 3
+  config.vm.define "worker3" do |node|
+    node.vm.hostname = "worker3"
+    node.vm.network "private_network", ip: "192.168.121.22", libvirt__network_name: "vagrant-libvirt"
+    node.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 4096   # 4 GB RAM
+      libvirt.cpus = 2        # 2 CPUs
+    end
+    node.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+    SHELL
+  end
+
+  # Create HAProxy node 1
+  config.vm.define "haproxy1" do |node|
+    node.vm.hostname = "haproxy1"
+    node.vm.network "private_network", ip: "192.168.121.30", libvirt__network_name: "vagrant-libvirt"
+    node.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 1024   # 1 GB RAM
+      libvirt.cpus = 1        # 1 CPU
+    end
+  end
+
+  # Create HAProxy node 2
+  config.vm.define "haproxy2" do |node|
+    node.vm.hostname = "haproxy2"
+    node.vm.network "private_network", ip: "192.168.121.31", libvirt__network_name: "vagrant-libvirt"
+    node.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 1024   # 1 GB RAM
+      libvirt.cpus = 1        # 1 CPU
+    end
+  end
+end
+

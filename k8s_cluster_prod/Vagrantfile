@@ -1,0 +1,118 @@
+# Vagrantfile for 2 Master nodes, 3 Worker nodes, and 2 HAProxy nodes with VRRP using libvirt
+Vagrant.configure("2") do |config|
+  # Define the base box for Debian Bookworm
+  config.vm.box = "generic/debian12"
+  
+  # Use the libvirt provider for all VMs
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.memory = 2048  # Default memory for nodes
+    libvirt.cpus = 1       # Default CPU for nodes
+  end
+  
+  # Create Master nodes
+  (1..3).each do |i|
+    config.vm.define "master#{i}.k8s.prod" do |node|
+      node.vm.hostname = "master#{i}.k8s.prod"
+      node.vm.network "private_network", ip: "192.168.121.4#{i}" , libvirt__network_name: "vagrant-libvirt"
+      
+      # Customize resources for each master node
+      node.vm.provider :libvirt do |libvirt|
+        libvirt.memory = 2048   # 2 GB RAM
+        libvirt.cpus = 1        # 1 CPU
+      end
+
+      # Provision the Master nodes (install necessary packages)
+      node.vm.provision "shell", inline: <<-SHELL
+        sudo apt-get update
+        # Install Kubernetes components (e.g., kubelet, kubeadm, kubectl) here if needed
+      SHELL
+    end
+  end
+
+  # Create Worker nodes
+  (1..3).each do |i|
+    config.vm.define "worker#{i}.k8s.prod" do |node|
+      node.vm.hostname = "worker#{i}.k8s.prod"
+      node.vm.network "private_network", ip: "192.168.121.5#{i}" , libvirt__network_name: "vagrant-libvirt"
+      
+      # Customize resources for each worker node
+      node.vm.provider :libvirt do |libvirt|
+        libvirt.memory = 4096   # 4 GB RAM
+        libvirt.cpus = 2        # 2 CPUs
+      end
+
+      # Provision the Worker nodes (install necessary packages)
+      node.vm.provision "shell", inline: <<-SHELL
+        sudo apt-get update
+        # Install Kubernetes components (e.g., kubelet, kubeadm, kubectl) here if needed
+      SHELL
+    end
+  end
+
+  # Create HAProxy nodes with VRRP
+  (1..2).each do |i|
+    config.vm.define "haproxy#{i}.k8s.prod" do |node|
+      node.vm.hostname = "haproxy#{i}.k8s.prod"
+      node.vm.network "private_network", ip: "192.168.121.6#{i}" , libvirt__network_name: "vagrant-libvirt"
+      
+      # Customize resources for each HAProxy node
+      node.vm.provider :libvirt do |libvirt|
+        libvirt.memory = 1024    # 1 GB RAM
+        libvirt.cpus = 1         # 1 CPU
+      end
+
+      # Provision HAProxy and Keepalived
+      node.vm.provision "shell", inline: <<-SHELL
+        sudo apt-get update
+        sudo apt-get install -y haproxy keepalived
+        sudo systemctl enable haproxy
+        sudo systemctl enable keepalived
+      SHELL
+
+      # VRRP configuration
+      node.vm.provision "shell", inline: <<-SHELL
+        # Configure Keepalived
+        if [ #{i} -eq 1 ]; then
+          echo "
+          vrrp_instance VI_1 {
+              state MASTER
+              interface eth1
+              virtual_router_id 51
+              priority 101
+              advert_int 1
+              authentication {
+                  auth_type PASS
+                  auth_pass mypassword
+              }
+              virtual_ipaddress {
+                  192.168.121.200
+              }
+          }" | sudo tee /etc/keepalived/keepalived.conf
+        else
+          echo "
+          vrrp_instance VI_1 {
+              state BACKUP
+              interface eth1
+              virtual_router_id 51
+              priority 100
+              advert_int 1
+              authentication {
+                  auth_type PASS
+                  auth_pass mypassword
+              }
+              virtual_ipaddress {
+                  192.168.121.200
+              }
+          }" | sudo tee /etc/keepalived/keepalived.conf
+        fi
+      SHELL
+
+      # Start services
+      node.vm.provision "shell", inline: <<-SHELL
+        sudo systemctl restart keepalived
+        sudo systemctl restart haproxy
+      SHELL
+    end
+  end
+end
+

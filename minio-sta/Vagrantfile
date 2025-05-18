@@ -1,0 +1,22 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bookworm64" # Debian 12
+  config.vm.hostname = "minio-test"
+  config.vm.network "private_network", ip: "192.168.122.100", type: "dhcp", libvirt__network_name: "default"
+
+  # Disable synced folders to avoid NFS issues
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.memory = 4096 # 4GB RAM
+    libvirt.cpus = 2     # 2 CPUs
+
+    # Define 4 drives, each 5GB
+    drive_letters = ('b'..'e').to_a # Convert range to array
+    (1..4).each do |i|
+      libvirt.storage :file, size: "5G", type: "raw", bus: "virtio", device: "vd#{drive_letters[i-1]}"
+    end
+  end
+
+  # Provision with the shell script
+  config.vm.provision "shell", path: "setup_minio.sh"
+end

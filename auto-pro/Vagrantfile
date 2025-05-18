@@ -1,0 +1,20 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
+Vagrant.configure("2") do |config|
+  ##### VM definition #####
+  config.vm.define "rocky" do |config|
+  config.vm.hostname = "rocky"
+  config.vm.box = "debian/bookworm64"
+  config.vm.box_check_update = false
+  config.vm.provision :ansible do |ansible|
+    ansible.limit = "all"
+    ansible.playbook = "provision.yaml"
+  end
+  config.vm.provider :libvirt do |v|
+    v.memory = 1024
+    v.cpus = 1
+    end
+  end
+end

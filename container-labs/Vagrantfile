@@ -1,0 +1,55 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bookworm64"
+
+  # Disable NFS and use virtiofs instead
+  #config.vm.synced_folder ".", "/vagrant", type: "virtiofs"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  # Docker VM
+  config.vm.define "docker_vm" do |docker|
+    docker.vm.hostname = "docker-host"
+    docker.vm.network "private_network", ip: "192.168.100.110"
+    
+    docker.vm.provider "libvirt" do |v|
+      v.memory = 2048
+      v.cpus = 2
+    end
+
+    # Install Docker using script and configure DNS
+    docker.vm.provision "shell", inline: <<-SHELL
+      # Set static DNS
+      echo -e "nameserver 178.22.122.100\nnameserver 185.51.200.2" | sudo tee /etc/resolv.conf
+      
+      # Install Docker
+      sudo apt update
+      sudo apt install -y curl
+      curl -fsSL https://get.docker.com -o get-docker.sh
+      sudo chmod +x get-docker.sh 
+      sudo ./get-docker.sh
+      sudo systemctl enable --now docker
+    SHELL
+  end
+
+  # Containerd VM
+  config.vm.define "containerd_vm" do |containerd|
+    containerd.vm.hostname = "containerd-host"
+    containerd.vm.network "private_network", ip: "192.168.100.111"
+    
+    containerd.vm.provider "libvirt" do |v|
+      v.memory = 2048
+      v.cpus = 2
+    end
+
+    # Install Containerd using apt and configure DNS
+    containerd.vm.provision "shell", inline: <<-SHELL
+      # Set static DNS
+      echo -e "nameserver 178.22.122.100\nnameserver 185.51.200.2" | sudo tee /etc/resolv.conf
+      
+      # Install Containerd
+      sudo apt update
+      sudo apt install -y containerd
+      sudo systemctl enable --now containerd
+    SHELL
+  end
+end
+
